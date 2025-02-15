@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ComicArchive</string>
+    <string name="comic_archive">Comic Archive</string>
+    <string name="there_is_nothing_here_yet">There is nothing here yet</string>
+    <string name="edit">Edit</string>
+</resources>
