@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,29 +7,62 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.serialization)
     alias(libs.plugins.room)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
 }
+
+val majorVersion = 0
+val minorVersion = 0
+val patchVersion = 1
+
+val appVersionName = "$majorVersion.$minorVersion.$patchVersion"
 
 android {
     namespace = "space.pixelsg.comicarchive"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            val localProperties = gradleLocalProperties(rootDir, providers)
+
+            keyAlias = localProperties.getProperty("SIGNING_KEY_ALIAS") ?: "defaultAlias"
+            keyPassword =
+                localProperties.getProperty("SIGNING_KEY_PASSWORD") ?: "defaultKeyPassword"
+            storeFile = file(
+                localProperties.getProperty("SIGNING_STORE_FILE") ?: "default/path/to/keystore.jks"
+            )
+            storePassword =
+                localProperties.getProperty("SIGNING_STORE_PASSWORD") ?: "defaultStorePassword"
+        }
+    }
+
     defaultConfig {
         applicationId = "space.pixelsg.comicarchive"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = majorVersion * 10000 + minorVersion * 100 + patchVersion
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        release {
+        getByName("release") {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+        }
+        getByName("debug") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -76,6 +111,11 @@ dependencies {
 
     // Teapot
     implementation(project(":teapot"))
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.perf)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,11 +75,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.logEvent
+import com.google.firebase.ktx.Firebase
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
 import org.burnoutcrew.reorderable.reorderable
 import space.pixelsg.comicarchive.R
+import space.pixelsg.comicarchive.ui.components.AnimatedArrowPointer
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.home.HomeFeature
 
@@ -88,7 +93,10 @@ fun HomeScreen(
     modifier: Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "infinite")
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var canScrollAppBar by remember { mutableStateOf(true) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        canScroll = { canScrollAppBar },
+    )
 
     val feature = features(HomeFeature::class)
 
@@ -96,10 +104,16 @@ fun HomeScreen(
         feature(HomeFeature.Msg.Action.Init)
     }
 
+
     var showSettingsSheet by remember { mutableStateOf(false) }
     val settingsSheetState = rememberModalBottomSheetState()
 
     val state by feature.state.collectAsState()
+
+
+    LaunchedEffect(state.items) {
+        canScrollAppBar = state.items.isNotEmpty()
+    }
 
     val addFabAnimatedScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -131,6 +145,10 @@ fun HomeScreen(
             FloatingActionButton(
                 modifier = Modifier.scale(addFabAnimatedScale),
                 onClick = {
+                    Firebase.analytics.logEvent("comic_add") {
+                        param("source", "home_screen")
+                        param("type", "local")
+                    }
                     feature(
                         HomeFeature.Msg.Action.OpenFileDialog(
                             listOf(
@@ -146,14 +164,28 @@ fun HomeScreen(
             }
         },
     ) { paddingInsets ->
-        if (state.items.isEmpty()) Box(
+        if (state.items.isEmpty()) Column(
             modifier = Modifier
                 .padding(paddingInsets)
                 .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
+            Spacer(modifier = Modifier.weight(.7f))
             Text(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier,
+                textAlign = TextAlign.Center,
+                fontSize = 16.sp,
                 text = stringResource(R.string.there_is_nothing_here_yet),
+            )
+            AnimatedArrowPointer(
+                dashLength = 6.dp,
+                strokeWidth = 3.dp,
+                pointerSize = 16.dp,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(48.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 

@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.StrokeCap
@@ -100,7 +99,7 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
 
                 val transformState = rememberTransformableState { zoomChange, offsetChange, _ ->
                     scale = max(1f, scale * zoomChange)
-                    offset = if (scale == 1f) Offset.Zero else offset + (offsetChange)
+                    offset = if (scale == 1f) Offset.Zero else offset + (offsetChange / scale)
                 }
 
                 // Reset zoom values
@@ -119,13 +118,6 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = pageState.pagePath,
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .align(Alignment.TopCenter)
-                            .alpha(.5f),
-                    )
                     when {
                         pageState.isLoading -> CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),

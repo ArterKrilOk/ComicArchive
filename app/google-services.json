@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "787548380828",
+    "project_id": "comicarchive-app",
+    "storage_bucket": "comicarchive-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787548380828:android:925306e20844eb3749d759",
+        "android_client_info": {
+          "package_name": "space.pixelsg.comicarchive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1Onbn9AlqPjieZ4bUv9XlOdTkctQWpOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
