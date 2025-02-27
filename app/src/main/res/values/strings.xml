@@ -3,4 +3,8 @@
     <string name="comic_archive">Comic Archive</string>
     <string name="there_is_nothing_here_yet">There is nothing here yet\nClick + to add comic</string>
     <string name="edit">Edit</string>
+    <string name="downloading_torrents">Downloading torrents...</string>
+    <string name="settings">Settings</string>
+    <string name="grid_size">Grid size</string>
+    <string name="home">Home</string>
 </resources>

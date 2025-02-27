@@ -94,11 +94,11 @@ class MngComicProvider(
                     if (sourcesToCache.isEmpty()) break
 
                     if (entry.name in sourcesToCache) {
-                        tmpFilesProvider.createTmpFileUsingStream(
-                            key = TmpKey.createFromUriAndSource(uri, entry.name),
-                            populateFile = { fos ->
-                                zis.copyTo(fos)
-                            },
+                        val tmpKey = TmpKey.createFromUriAndSource(uri, entry.name)
+                        val exitingTmp = tmpFilesProvider.getTmpFile(tmpKey)
+                        if (exitingTmp == null) tmpFilesProvider.createTmpFileUsingStream(
+                            key = tmpKey,
+                            populateFile = { fos -> zis.copyTo(fos) },
                         )
                         sourcesToCache -= entry.name
                     }

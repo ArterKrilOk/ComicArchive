@@ -6,8 +6,8 @@ import teapot.reducer.simpleReducer
 fun reduceActions() =
     simpleReducer<RootFeature.State, RootFeature.Msg.Action, RootFeature.Eff> { state, message ->
         when (message) {
-            is RootFeature.Msg.Action.DestinationChanged -> state.copy(
-                destination = message.destination ?: state.destination,
+            is RootFeature.Msg.Action.Drawer -> state.copy(
+                isDrawerExpanded = message.open,
             )
         }
     }

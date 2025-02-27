@@ -41,10 +41,7 @@ class ZipComicProvider(
     }
 
     override suspend fun getComicPage(
-        uri: String,
-        page: String,
-        cacheNext: Boolean,
-        isPermanent: Boolean
+        uri: String, page: String, cacheNext: Boolean, isPermanent: Boolean
     ): TmpFile = uriResolver.openUri(uri) { inputStream ->
         ZipInputStream(inputStream).use { zis ->
             var entry = zis.nextEntry
@@ -61,8 +58,10 @@ class ZipComicProvider(
             // Extract additional pages
             repeat(CACHE_NEXT) {
                 entry = zis.nextEntry ?: return@repeat
-                tmpFilesProvider.createTmpFileUsingStream(
-                    key = TmpKey.createFromUriAndPage(uri, entry.name),
+                val tmpKey = TmpKey.createFromUriAndPage(uri, entry.name)
+                val existingTmp = tmpFilesProvider.getTmpFile(tmpKey)
+                if (existingTmp == null) tmpFilesProvider.createTmpFileUsingStream(
+                    key = tmpKey,
                     populateFile = { fos -> zis.copyTo(fos) },
                 )
             }

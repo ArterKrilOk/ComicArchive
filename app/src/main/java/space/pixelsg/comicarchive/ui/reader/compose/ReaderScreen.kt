@@ -1,19 +1,29 @@
 package space.pixelsg.comicarchive.ui.reader.compose
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemGesturesPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,18 +32,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.reader.ReaderFeature
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -74,6 +91,18 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
+            var isPageSliderVisible by remember { mutableStateOf(false) }
+            val scope = rememberCoroutineScope()
+            var hideSliderJob: Job? by remember { mutableStateOf(null) }
+
+            fun hideSlider(instantly: Boolean = false) {
+                hideSliderJob?.cancel()
+                hideSliderJob = scope.launch {
+                    if (!instantly) delay(4.seconds)
+                    isPageSliderVisible = false
+                }
+            }
+
             HorizontalPager(
                 state = pagerState,
                 userScrollEnabled = userScrollEnabled,
@@ -99,7 +128,7 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
 
                 val transformState = rememberTransformableState { zoomChange, offsetChange, _ ->
                     scale = max(1f, scale * zoomChange)
-                    offset = if (scale == 1f) Offset.Zero else offset + (offsetChange / scale)
+                    offset = if (scale == 1f) Offset.Zero else offset + offsetChange
                 }
 
                 // Reset zoom values
@@ -134,10 +163,14 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                                     interactionSource = null,
                                     indication = null,
                                     onDoubleClick = {
+                                        if (isPageSliderVisible) hideSlider(instantly = true)
+
                                         if (scale == 1f && offset == Offset.Zero) scale = 2.5f
                                         else resetZoom()
                                     },
-                                    onClick = { },
+                                    onClick = {
+                                        if (isPageSliderVisible) hideSlider(instantly = true)
+                                    },
                                 )
                         ) {
                             AsyncImage(
@@ -163,12 +196,51 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                 }
             }
 
-            if (pagerState.pageCount > 0) Text(
-                text = "${pagerState.currentPage + 1}/${pagerState.pageCount}",
+            AnimatedVisibility(
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically(),
+                visible = pagerState.pageCount > 0 && !isPageSliderVisible,
                 modifier = Modifier
                     .padding(innerPadding)
                     .align(Alignment.BottomCenter),
-            )
+            ) {
+                Text(
+                    text = "${pagerState.currentPage + 1}/${pagerState.pageCount}",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(percent = 100))
+                        .clickable {
+                            isPageSliderVisible = true
+                            hideSlider()
+                        }
+                        .padding(horizontal = 12.dp),
+                )
+            }
+
+            AnimatedVisibility(
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically(),
+                visible = pagerState.pageCount > 0 && isPageSliderVisible,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .systemGesturesPadding()
+                    .align(Alignment.BottomCenter),
+            ) {
+                val pagesCount = pagerState.pageCount - 1
+
+                Slider(
+                    steps = pagesCount - 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    value = pagerState.currentPage.toFloat(),
+                    valueRange = 0f..pagesCount.toFloat(),
+                    onValueChange = {
+                        scope.launch {
+                            hideSliderJob?.cancelAndJoin()
+                            pagerState.scrollToPage(it.toInt())
+                        }
+                    },
+                    onValueChangeFinished = { hideSlider() }
+                )
+            }
         }
     }
 }

@@ -67,8 +67,10 @@ class PdfComicProvider(
                 val repeatNext = min(CACHE_NEXT, pdfRenderer.pageCount - pageIndex - 1)
 
                 if (cacheNext) repeat(repeatNext) { index ->
-                    tmpFilesProvider.createTmpFileUsingStream(
-                        key = TmpKey.createFromUriAndPage(uri, page),
+                    val tmpKey = TmpKey.createFromUriAndPage(uri, page)
+                    val exitingTmp = tmpFilesProvider.getTmpFile(tmpKey)
+                    if (exitingTmp == null) tmpFilesProvider.createTmpFileUsingStream(
+                        key = tmpKey,
                         permanent = isPermanent,
                         populateFile = { fos ->
                             pdfRenderer.renderAndSavePage(

@@ -68,7 +68,7 @@ class ComicServiceImpl(
                 uri,
                 poster,
                 cacheNext = false,
-                isPermanent = true
+                isPermanent = true,
             )
         }
     }

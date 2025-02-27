@@ -63,10 +63,11 @@ class HomeFeature(
             data class RemoveComic(val id: Long) : Action
             data object ClearImportState : Action
 
-            data class LoadPoster(val id: Long) : Action
+            data class LoadPosters(val fromIndex: Int, val count: Int) : Action
 
             data class Move(val fromId: Long, val toId: Long) : Action
             data object ApplyEditedPositions : Action
+            data object OpenDrawer : Action
         }
 
         sealed interface Internal : Msg {

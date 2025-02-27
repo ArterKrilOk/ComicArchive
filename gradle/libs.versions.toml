@@ -1,6 +1,7 @@
 [versions]
 agp = "8.8.1"
 coilCompose = "3.0.4"
+datastorePreferences = "1.1.2"
 firebaseBom = "33.9.0"
 fragmentKtx = "1.8.6"
 koinBom = "4.0.2"
@@ -12,6 +13,11 @@ espressoCore = "3.6.1"
 kotlinxCoroutinesAndroid = "1.9.0"
 kotlinxCoroutinesCore = "1.9.0"
 kotlinxDatetime = "0.6.1"
+libtorrent4j = "2.1.0-35"
+libtorrent4jAndroidArm = "2.1.0-35"
+libtorrent4jAndroidArm64 = "2.1.0-35"
+libtorrent4jAndroidX86 = "2.1.0-35"
+libtorrent4jAndroidX86_x4 = "2.1.0-35"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.0"
 composeBom = "2025.02.00"
@@ -23,9 +29,14 @@ room = "2.6.1"
 ksp = "2.1.0-1.0.29"
 kotlinSerialization = "1.7.3"
 transitionKtx = "1.5.1"
+workRuntimeKtx = "2.10.0"
+lifecycleService = "2.8.7"
+zoomimageViewCoil3 = "1.1.2"
+zoomimageCompose = "1.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "fragmentKtx" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -36,6 +47,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-transition-ktx = { module = "androidx.transition:transition-ktx", version.ref = "transitionKtx" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -65,8 +77,16 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+libtorrent4j = { module = "org.libtorrent4j:libtorrent4j", version.ref = "libtorrent4j" }
+libtorrent4j-android-arm64 = { module = "org.libtorrent4j:libtorrent4j-android-arm64", version.ref = "libtorrent4jAndroidArm64" }
+libtorrent4j-android-arm = { module = "org.libtorrent4j:libtorrent4j-android-arm", version.ref = "libtorrent4jAndroidArm" }
+libtorrent4j-android-x86_x4 = { module = "org.libtorrent4j:libtorrent4j-android-x86_64", version.ref = "libtorrent4jAndroidX86_x4" }
+libtorrent4j-android-x86 = { module = "org.libtorrent4j:libtorrent4j-android-x86", version.ref = "libtorrent4jAndroidX86" }
 reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "reorderable" }
 ffmpeg-kit-full = { module = "com.arthenica:ffmpeg-kit-full", version.ref = "ffmpegKitFull" }
+androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
+zoomimage-compose = { module = "io.github.panpf.zoomimage:zoomimage-compose", version.ref = "zoomimageCompose" }
+zoomimage-view-coil3 = { module = "io.github.panpf.zoomimage:zoomimage-view-coil3", version.ref = "zoomimageViewCoil3" }
 
 
 [plugins]

@@ -34,7 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -43,21 +43,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.currentCompositeKeyHash
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +64,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -84,6 +81,8 @@ import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
 import org.burnoutcrew.reorderable.reorderable
 import space.pixelsg.comicarchive.R
 import space.pixelsg.comicarchive.ui.components.AnimatedArrowPointer
+import space.pixelsg.comicarchive.ui.components.UiPreferences
+import space.pixelsg.comicarchive.ui.components.rememberUiPref
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.home.HomeFeature
 
@@ -104,15 +103,13 @@ fun HomeScreen(
         feature(HomeFeature.Msg.Action.Init)
     }
 
-
-    var showSettingsSheet by remember { mutableStateOf(false) }
-    val settingsSheetState = rememberModalBottomSheetState()
-
     val state by feature.state.collectAsState()
 
+    var isEditMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.items) {
         canScrollAppBar = state.items.isNotEmpty()
+        if (isEditMode && state.items.isEmpty()) isEditMode = false
     }
 
     val addFabAnimatedScale by infiniteTransition.animateFloat(
@@ -131,11 +128,13 @@ fun HomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.comic_archive)) },
                 scrollBehavior = scrollBehavior,
-                actions = {
+                navigationIcon = {
                     IconButton(
-                        onClick = { showSettingsSheet = true }
+                        onClick = {
+                            feature(HomeFeature.Msg.Action.OpenDrawer)
+                        },
                     ) {
-                        Icon(Icons.Rounded.Settings, contentDescription = null)
+                        Icon(Icons.Rounded.Menu, contentDescription = null)
                     }
                 },
             )
@@ -189,7 +188,6 @@ fun HomeScreen(
             )
         }
 
-        var isEditMode by remember { mutableStateOf(false) }
 
         fun exitEditMode() {
             isEditMode = false
@@ -220,17 +218,18 @@ fun HomeScreen(
         )
 
         val firstVisibleItemIndex by remember { derivedStateOf { gridState.firstVisibleItemIndex } }
-        var gridSize by rememberSaveable(key = "grid_size") { mutableFloatStateOf(150f) }
+        var gridSize by rememberUiPref(
+            LocalContext.current,
+            UiPreferences.GRID_SCALE,
+            defaultValue = 150f,
+        )
 
         LaunchedEffect(firstVisibleItemIndex, state.items.size, gridSize) {
             val itemsCount =
-                (gridState.layoutInfo.visibleItemsInfo.size * 1.5f).toInt()
-            val first = firstVisibleItemIndex
-            for (i in first..first + itemsCount) {
-                if (i !in state.items.indices) break
+                (gridState.layoutInfo.visibleItemsInfo.size * 2f).toInt()
+            val first = firstVisibleItemIndex - 2 // Make sure to preload a little bit before
 
-                feature(HomeFeature.Msg.Action.LoadPoster(state.items[i].comic.id))
-            }
+            feature(HomeFeature.Msg.Action.LoadPosters(first, itemsCount))
         }
 
         LazyVerticalGrid(
@@ -396,17 +395,6 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-
-        if (showSettingsSheet) ModalBottomSheet(
-            onDismissRequest = { showSettingsSheet = false },
-            sheetState = settingsSheetState,
-        ) {
-            SettingsScreen(
-                modifier = Modifier.fillMaxWidth(),
-                gridSize = gridSize,
-                onGridSizeChange = { gridSize = it },
-            )
         }
     }
 }

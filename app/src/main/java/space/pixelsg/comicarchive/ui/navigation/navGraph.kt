@@ -9,6 +9,7 @@ import androidx.navigation.createGraph
 import androidx.navigation.toRoute
 import space.pixelsg.comicarchive.ui.home.compose.HomeScreen
 import space.pixelsg.comicarchive.ui.reader.compose.ReaderScreen
+import space.pixelsg.comicarchive.ui.settings.SettingsScreen
 import space.pixelsg.comicarchive.ui.test.TestScreen
 
 fun createNavGraph(navController: NavController): NavGraph = navController.createGraph(
@@ -20,6 +21,10 @@ fun createNavGraph(navController: NavController): NavGraph = navController.creat
 
     composable<Destination.Test> {
         TestScreen(modifier = Modifier.fillMaxSize())
+    }
+
+    composable<Destination.Settings> {
+        SettingsScreen(modifier = Modifier.fillMaxSize(), navController)
     }
 
     composable<Destination.Reader> {

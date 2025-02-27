@@ -1,10 +1,10 @@
 package space.pixelsg.comicarchive.ui.home.reducers
 
-import space.pixelsg.comicarchive.ext.updateByPredicate
 import space.pixelsg.comicarchive.ui.home.HomeFeature
 import space.pixelsg.comicarchive.ui.navigation.Destination
 import space.pixelsg.comicarchive.ui.navigation.NavMsg
 import space.pixelsg.comicarchive.ui.root.ContentMessenger
+import space.pixelsg.comicarchive.ui.root.RootFeature
 import teapot.reducer.simpleReducer
 
 fun reduceActions() =
@@ -43,20 +43,20 @@ fun reduceActions() =
                 importState = null,
             )
 
-            is HomeFeature.Msg.Action.LoadPoster -> state.copy(
-                items = state.items.updateByPredicate(
-                    predicate = { it.comic.id == message.id },
-                    update = {
-                        it.copy(isLoading = true).also { _ ->
-                            val posterPath = it.comic.info.pages.firstOrNull()
-                            if (!posterPath.isNullOrBlank()) HomeFeature.Eff.LoadPoster(
-                                it.comic.id,
-                                it.comic.uri,
-                                posterPath,
-                            ).launch()
-                        }
+            is HomeFeature.Msg.Action.LoadPosters -> state.copy(
+                items = state.items.mapIndexed { index, comicState ->
+                    if (index in message.range && comicState.isNeedToLoad) comicState.copy(
+                        isLoading = true,
+                    ).also {
+                        val posterPath = it.comic.info.pages.firstOrNull()
+                        if (!posterPath.isNullOrBlank()) HomeFeature.Eff.LoadPoster(
+                            id = it.comic.id,
+                            uri = it.comic.uri,
+                            pagePath = posterPath,
+                        ).launch()
                     }
-                )
+                    else comicState
+                }
             )
 
             is HomeFeature.Msg.Action.Move -> state.copy(
@@ -70,5 +70,12 @@ fun reduceActions() =
             is HomeFeature.Msg.Action.ApplyEditedPositions -> state.also {
                 HomeFeature.Eff.ApplyPositions(it.items).launch()
             }
+
+            is HomeFeature.Msg.Action.OpenDrawer -> state.also {
+                RootFeature.Msg.Action.Drawer().send()
+            }
         }
     }
+
+private val HomeFeature.Msg.Action.LoadPosters.range: IntRange
+    get() = fromIndex..fromIndex + count

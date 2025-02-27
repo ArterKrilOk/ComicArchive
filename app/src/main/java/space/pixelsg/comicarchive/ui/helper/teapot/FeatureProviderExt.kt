@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.android.get
 import org.koin.compose.getKoin
 import teapot.effect.Effect
@@ -34,7 +37,8 @@ inline fun <reified F : FeatureP<S, M, E>, S, M : Message, E : Effect> features(
         return remember { feature }
     }
 
-    val scope = LocalLifecycleOwner.current.lifecycleScope
+    val scope =
+        remember(LocalLifecycleOwner) { CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()) }
     val koin = getKoin()
     return remember {
         koin.get<F>().createFeature(scope).also { feature ->

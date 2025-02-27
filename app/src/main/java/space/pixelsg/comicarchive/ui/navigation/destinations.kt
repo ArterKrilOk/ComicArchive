@@ -15,5 +15,8 @@ sealed interface Destination {
     data object Test : Destination
 
     @Serializable
+    data object Settings : Destination
+
+    @Serializable
     data class Reader(val uri: String) : Destination
 }

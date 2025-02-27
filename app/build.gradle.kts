@@ -14,7 +14,7 @@ plugins {
 
 val majorVersion = 0
 val minorVersion = 0
-val patchVersion = 1
+val patchVersion = 2
 
 val appVersionName = "$majorVersion.$minorVersion.$patchVersion"
 
@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.lifecycle.service)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -143,4 +144,16 @@ dependencies {
     implementation(libs.reorderable)
     implementation(libs.ffmpeg.kit.full)
 
+    implementation(libs.androidx.datastore.preferences)
+
+    implementation(libs.libtorrent4j)
+    implementation(libs.libtorrent4j.android.arm)
+    implementation(libs.libtorrent4j.android.arm64)
+    implementation(libs.libtorrent4j.android.x86)
+    implementation(libs.libtorrent4j.android.x86.x4)
+
+    implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(libs.zoomimage.view.coil3)
+    implementation(libs.zoomimage.compose)
 }
