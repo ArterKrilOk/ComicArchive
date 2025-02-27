@@ -1,18 +1,12 @@
 package space.pixelsg.comicarchive.ui.reader.compose
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateOffsetAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,19 +30,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import com.github.panpf.zoomimage.ZoomImage
+import com.github.panpf.zoomimage.compose.rememberZoomState
+import com.github.panpf.zoomimage.subsampling.ImageSource
+import com.github.panpf.zoomimage.subsampling.fromFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.reader.ReaderFeature
-import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -112,38 +107,35 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                 val pageState = state.pages[it]
                 val isActivePage = it == pagerState.currentPage
 
-                var scale by remember { mutableFloatStateOf(1f) }
-                var offset by remember { mutableStateOf(Offset.Zero) }
+                val zoomState = rememberZoomState()
+                var isDefaultZoom by remember { mutableStateOf(true) }
 
-                val animatedScale by animateFloatAsState(
-                    targetValue = scale,
-                    label = "scale_animation",
-                    animationSpec = spring(dampingRatio = .7f),
-                )
-                val animatedOffset by animateOffsetAsState(
-                    targetValue = offset,
-                    label = "offset_animation",
-                    animationSpec = spring(dampingRatio = .7f),
-                )
-
-                val transformState = rememberTransformableState { zoomChange, offsetChange, _ ->
-                    scale = max(1f, scale * zoomChange)
-                    offset = if (scale == 1f) Offset.Zero else offset + offsetChange
+                LaunchedEffect(zoomState.zoomable) {
+                    zoomState.zoomable.threeStepScale = false
                 }
 
-                // Reset zoom values
-                fun resetZoom() {
-                    scale = 1f
-                    offset = Offset.Zero
+                // Enable subsampling for large pages
+                LaunchedEffect(pageState.imagePath, zoomState.subsampling) {
+                    if (pageState.imagePath.isNullOrBlank()) return@LaunchedEffect
+                    zoomState.setSubsamplingImage(ImageSource.fromFile(pageState.imagePath))
                 }
-
+                // Check is zoomed
+                LaunchedEffect(zoomState.zoomable.transform.scale) {
+                    isDefaultZoom =
+                        zoomState.zoomable.transform.scale.scaleX <= zoomState.zoomable.baseTransform.scale.scaleX
+                                || zoomState.zoomable.transform.scale.scaleY <= zoomState.zoomable.baseTransform.scale.scaleY
+                }
                 // Restore default zoom when page is not active
                 LaunchedEffect(isActivePage) {
-                    if (!isActivePage) resetZoom()
+                    if (!isActivePage) zoomState.zoomable.reset("reset_zoom_then_nonactive")
                 }
                 // Lock pager scrolls then zoomed
-                LaunchedEffect(scale) {
-                    if (isActivePage) userScrollEnabled = scale == 1f
+                LaunchedEffect(isDefaultZoom) {
+                    if (isActivePage) userScrollEnabled = isDefaultZoom
+                }
+
+                fun onPageTap() {
+                    if (isPageSliderVisible) hideSlider(instantly = true)
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -153,40 +145,18 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                             strokeCap = StrokeCap.Round,
                         )
 
-                        pageState.imagePath.isNullOrBlank().not() -> Box(
+                        pageState.imagePath.isNullOrBlank().not() -> ZoomImage(
+                            painter = rememberAsyncImagePainter(
+                                pageState.imagePath,
+                                filterQuality = FilterQuality.Low
+                            ),
                             modifier = Modifier
-                                .transformable(
-                                    state = transformState,
-                                    canPan = { scale != 1f },
-                                )
-                                .combinedClickable(
-                                    interactionSource = null,
-                                    indication = null,
-                                    onDoubleClick = {
-                                        if (isPageSliderVisible) hideSlider(instantly = true)
-
-                                        if (scale == 1f && offset == Offset.Zero) scale = 2.5f
-                                        else resetZoom()
-                                    },
-                                    onClick = {
-                                        if (isPageSliderVisible) hideSlider(instantly = true)
-                                    },
-                                )
-                        ) {
-                            AsyncImage(
-                                modifier = Modifier
-                                    .graphicsLayer(
-                                        scaleX = animatedScale,
-                                        scaleY = animatedScale,
-                                        translationX = animatedOffset.x,
-                                        translationY = animatedOffset.y
-                                    )
-                                    .fillMaxSize(),
-                                model = pageState.imagePath,
-                                contentDescription = null,
-                                filterQuality = FilterQuality.High,
-                            )
-                        }
+                                .fillMaxSize(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            zoomState = zoomState,
+                            onTap = { onPageTap() },
+                        )
 
                         else -> Text(
                             text = "Error loading page\n${pageState.error}\n${pageState.errorCount}",

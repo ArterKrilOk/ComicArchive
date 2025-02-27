@@ -4,7 +4,6 @@ import space.pixelsg.comicarchive.ui.home.HomeFeature
 import space.pixelsg.comicarchive.ui.navigation.Destination
 import space.pixelsg.comicarchive.ui.navigation.NavMsg
 import space.pixelsg.comicarchive.ui.root.ContentMessenger
-import space.pixelsg.comicarchive.ui.root.RootFeature
 import teapot.reducer.simpleReducer
 
 fun reduceActions() =
@@ -69,10 +68,6 @@ fun reduceActions() =
 
             is HomeFeature.Msg.Action.ApplyEditedPositions -> state.also {
                 HomeFeature.Eff.ApplyPositions(it.items).launch()
-            }
-
-            is HomeFeature.Msg.Action.OpenDrawer -> state.also {
-                RootFeature.Msg.Action.Drawer().send()
             }
         }
     }

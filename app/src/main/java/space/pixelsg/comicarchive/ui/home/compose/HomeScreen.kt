@@ -54,6 +54,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +76,7 @@ import coil3.compose.AsyncImage
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
@@ -85,6 +87,7 @@ import space.pixelsg.comicarchive.ui.components.UiPreferences
 import space.pixelsg.comicarchive.ui.components.rememberUiPref
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.home.HomeFeature
+import space.pixelsg.comicarchive.ui.root.LocalDrawerState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -92,6 +95,7 @@ fun HomeScreen(
     modifier: Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "infinite")
+    val scope = rememberCoroutineScope()
     var canScrollAppBar by remember { mutableStateOf(true) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         canScroll = { canScrollAppBar },
@@ -122,6 +126,11 @@ fun HomeScreen(
         label = "add_fab_scale",
     )
 
+    val drawerState = LocalDrawerState.current
+    val burgerAnimatedRotation by animateFloatAsState(
+        targetValue = if (drawerState?.isOpen == true) 180f else 0f,
+    )
+
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -130,8 +139,9 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(
+                        modifier = Modifier.rotate(burgerAnimatedRotation),
                         onClick = {
-                            feature(HomeFeature.Msg.Action.OpenDrawer)
+                            scope.launch { drawerState?.open() }
                         },
                     ) {
                         Icon(Icons.Rounded.Menu, contentDescription = null)

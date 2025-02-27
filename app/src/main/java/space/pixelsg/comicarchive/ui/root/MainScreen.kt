@@ -6,26 +6,33 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,6 +41,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 import space.pixelsg.comicarchive.R
 import space.pixelsg.comicarchive.ui.navigation.Destination
 import space.pixelsg.comicarchive.ui.navigation.NavigationMessenger
@@ -48,16 +56,10 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(state.isDrawerExpanded) {
-        if (state.isDrawerExpanded) drawerState.open()
-        else drawerState.close()
-    }
-
-    LaunchedEffect(drawerState.isClosed) {
-        if (drawerState.isClosed && state.isDrawerExpanded) dispatcher(
-            RootFeature.Msg.Action.Drawer(open = false)
-        )
+    fun closeDrawer() {
+        scope.launch { drawerState.close() }
     }
 
     LaunchedEffect(navController) {
@@ -74,8 +76,11 @@ fun MainScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = true,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(
+                modifier = Modifier.width(IntrinsicSize.Max),
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -83,6 +88,15 @@ fun MainScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
                     horizontalAlignment = Alignment.Start,
                 ) {
+                    Text(
+                        text = stringResource(R.string.comic_archive),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterHorizontally),
+                    )
+
                     val currentNavState by navController.currentBackStackEntryAsState()
                     val currentRouteClass = currentNavState?.destination?.route
 
@@ -99,6 +113,7 @@ fun MainScreen(
                         selected = currentRouteClass == Destination.Home::class.qualifiedName,
                         onClick = {
                             navController.popBackStack(Destination.Home, inclusive = false)
+                            closeDrawer()
                         }
                     )
 
@@ -115,31 +130,35 @@ fun MainScreen(
                         selected = currentRouteClass == Destination.Settings::class.qualifiedName,
                         onClick = {
                             navController.navigate(Destination.Settings)
+                            closeDrawer()
                         }
                     )
+
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
             }
         },
     ) {
-        NavHost(
-            navController = navController,
-            graph = createNavGraph(navController),
-            modifier = Modifier.fillMaxSize(),
-            popExitTransition = {
-                scaleOut(
-                    targetScale = 0.85f,
-                    animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                    transformOrigin = TransformOrigin(
-                        pivotFractionX = 0.5f,
-                        pivotFractionY = 0.5f
+        CompositionLocalProvider(LocalDrawerState provides drawerState) {
+            NavHost(
+                navController = navController,
+                graph = createNavGraph(navController),
+                modifier = Modifier.fillMaxSize(),
+                popExitTransition = {
+                    scaleOut(
+                        targetScale = 0.85f,
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+                        transformOrigin = TransformOrigin(
+                            pivotFractionX = 0.5f,
+                            pivotFractionY = 0.5f
+                        )
                     )
-                )
-            },
-            popEnterTransition = {
-                EnterTransition.None
-            },
-        )
+                },
+                popEnterTransition = {
+                    EnterTransition.None
+                },
+            )
+        }
     }
-
 }

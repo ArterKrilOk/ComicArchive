@@ -67,7 +67,6 @@ class HomeFeature(
 
             data class Move(val fromId: Long, val toId: Long) : Action
             data object ApplyEditedPositions : Action
-            data object OpenDrawer : Action
         }
 
         sealed interface Internal : Msg {

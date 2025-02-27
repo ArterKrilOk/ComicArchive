@@ -14,7 +14,7 @@ plugins {
 
 val majorVersion = 0
 val minorVersion = 0
-val patchVersion = 2
+val patchVersion = 3
 
 val appVersionName = "$majorVersion.$minorVersion.$patchVersion"
 
