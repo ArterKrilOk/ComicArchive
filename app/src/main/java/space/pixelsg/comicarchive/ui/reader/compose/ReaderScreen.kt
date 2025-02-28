@@ -43,8 +43,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import space.pixelsg.comicarchive.ui.components.CustomMotionDurationsScale
 import space.pixelsg.comicarchive.ui.helper.teapot.features
 import space.pixelsg.comicarchive.ui.reader.ReaderFeature
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -83,11 +86,13 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
             }
         }
 
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             var isPageSliderVisible by remember { mutableStateOf(false) }
-            val scope = rememberCoroutineScope()
+            val scope =
+                rememberCoroutineScope { CustomMotionDurationsScale() + EmptyCoroutineContext }
             var hideSliderJob: Job? by remember { mutableStateOf(null) }
 
             fun hideSlider(instantly: Boolean = false) {
@@ -127,7 +132,11 @@ fun ReaderScreen(modifier: Modifier = Modifier, uri: String) {
                 }
                 // Restore default zoom when page is not active
                 LaunchedEffect(isActivePage) {
-                    if (!isActivePage) zoomState.zoomable.reset("reset_zoom_then_nonactive")
+                    if (!isActivePage) {
+                        withContext(CustomMotionDurationsScale()) {
+                            zoomState.zoomable.reset("reset_zoom_then_nonactive")
+                        }
+                    }
                 }
                 // Lock pager scrolls then zoomed
                 LaunchedEffect(isDefaultZoom) {

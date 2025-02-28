@@ -48,6 +48,10 @@ import space.pixelsg.comicarchive.ui.navigation.NavigationMessenger
 import space.pixelsg.comicarchive.ui.navigation.createNavGraph
 import teapot.message.MessageDispatcher
 
+private val DrawerGestureDisabledClasses = listOfNotNull(
+    Destination.Reader::class.qualifiedName
+)
+
 @Composable
 fun MainScreen(
     navMessenger: NavigationMessenger,
@@ -74,9 +78,12 @@ fun MainScreen(
         navMessenger.bindTo { navController }
     }
 
+    val currentNavState by navController.currentBackStackEntryAsState()
+    val currentRouteClass = currentNavState?.destination?.route
+
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = true,
+        gesturesEnabled = !currentRouteClass.containsInAny(DrawerGestureDisabledClasses),
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(IntrinsicSize.Max),
@@ -96,9 +103,6 @@ fun MainScreen(
                             .weight(1f)
                             .align(Alignment.CenterHorizontally),
                     )
-
-                    val currentNavState by navController.currentBackStackEntryAsState()
-                    val currentRouteClass = currentNavState?.destination?.route
 
                     NavigationDrawerItem(
                         label = {
@@ -161,4 +165,14 @@ fun MainScreen(
             )
         }
     }
+}
+
+fun String?.containsInAny(list: List<String>): Boolean {
+    if (isNullOrBlank()) return false
+
+    list.forEach {
+        if (this.contains(it)) return true
+    }
+
+    return false
 }

@@ -69,7 +69,7 @@ class AndroidTorrentService : LifecycleService() {
         observeJob = GlobalScope.launch {
             while (true) {
                 torrents.forEach { (hash, handle) ->
-//                    val files
+
                 }
             }
         }

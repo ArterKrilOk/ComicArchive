@@ -14,7 +14,7 @@ plugins {
 
 val majorVersion = 0
 val minorVersion = 0
-val patchVersion = 3
+val patchVersion = 4
 
 val appVersionName = "$majorVersion.$minorVersion.$patchVersion"
 
@@ -156,4 +156,6 @@ dependencies {
 
     implementation(libs.zoomimage.view.coil3)
     implementation(libs.zoomimage.compose)
+
+    implementation(kotlin("reflect"))
 }
