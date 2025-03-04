@@ -3,11 +3,12 @@ package teapot.feature
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import teapot.chat.Chat
@@ -34,14 +35,14 @@ class SimpleFeature<S, M : Message, E : Effect>(
     override val state: StateFlow<S>
         get() = _state
 
-    private val _messages = MutableSharedFlow<M>(extraBufferCapacity = messagesBufferCapacity)
+    private val _messages = Channel<M>(capacity = messagesBufferCapacity)
 
     override fun dispatch(message: M) {
         featureScope.launch { dispatchSus(message) }
     }
 
     private suspend fun dispatchSus(message: M) {
-        _messages.emit(message)
+        _messages.send(message)
     }
 
     private fun launchEffect(effect: E) {
@@ -81,7 +82,7 @@ class SimpleFeature<S, M : Message, E : Effect>(
 
     init {
         // Collect messages and reduce them into new state
-        _messages.collectIn(featureScope) { message ->
+        _messages.receiveAsFlow().collectIn(featureScope) { message ->
             _state.emit(reducerContext.reducer(state.first(), message))
         }
         // Redirect all accepted messages to message queue

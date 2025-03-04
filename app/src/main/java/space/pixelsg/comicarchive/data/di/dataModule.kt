@@ -38,6 +38,13 @@ fun dataModule() = module {
         ).apply { if (exists().not()) mkdirs() }
     }
 
+    single(named("torrent_dir")) {
+        File(
+            androidContext().cacheDir,
+            "torrent"
+        ).apply { if (exists().not()) mkdirs() }
+    }
+
     // Create providers
     singleOf(::AndroidUriResolver).bind(UriResolver::class)
     single { ComicProviderSelector(get(), get(), get(), get(named("tmp_dir"))) }

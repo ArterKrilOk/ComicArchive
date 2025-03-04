@@ -1,5 +1,7 @@
 package space.pixelsg.comicarchive.service.comic
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import space.pixelsg.comicarchive.data.comic.ComicProviderSelector
@@ -9,6 +11,7 @@ import space.pixelsg.comicarchive.data.database.entity.IndexEntity
 import space.pixelsg.comicarchive.data.resolver.UriResolver
 import space.pixelsg.comicarchive.data.tmp.TmpFilesProvider
 import space.pixelsg.comicarchive.data.tmp.TmpKey
+import space.pixelsg.comicarchive.ext.scaleToMaxWidthOrHeight
 import space.pixelsg.comicarchive.models.ComicInfo
 import space.pixelsg.comicarchive.models.TmpFile
 import space.pixelsg.comicarchive.utils.ArgumentLock
@@ -54,26 +57,43 @@ class ComicServiceImpl(
         }
     }
 
+    private suspend fun getPageThumb(pageTmpFile: TmpFile, key: String): TmpFile {
+        // Create bitmap from tmp page
+        val bitmap = BitmapFactory.decodeFile(pageTmpFile.path)
+        // Scale bitmap
+        val scaled = bitmap.scaleToMaxWidthOrHeight(maxSideLength = 800)
+        // Create tmp and save bitmap
+        return tmpFilesProvider.createTmpFileUsingStream(key, permanent = true) { fos ->
+            scaled.compress(Bitmap.CompressFormat.JPEG, 85, fos)
+        } ?: throw RuntimeException("Failed to create image thumb")
+    }
+
     override suspend fun getComicPoster(uri: String): TmpFile = withContext(Dispatchers.IO) {
         pageArgumentLock.withLock(uri) {
             // Get info
             val info = getComicInfo(uri)
             val poster = info.pages.first()
+            // Try to get thumb tmp
+            val thumbTmpKey = TmpKey.createThumbFromUriAndPage(uri, poster)
+            val thumbTmpFile = tmpFilesProvider.getTmpFile(thumbTmpKey)
+            if (thumbTmpFile != null) return@withLock thumbTmpFile
             // Try to get tmp
             val tmpFile = tmpFilesProvider.getTmpFile(TmpKey.createFromUriAndPage(uri, poster))
-            if (tmpFile != null) return@withLock tmpFile
-            // Extract
+            if (tmpFile != null) return@withLock getPageThumb(tmpFile, thumbTmpKey)
+            // Extract page
             val provider = comicProviderSelector.getComicProvider(info.type)
-            return@withLock provider.getComicPage(
+            val pageTmp = provider.getComicPage(
                 uri,
                 poster,
                 cacheNext = false,
-                isPermanent = true,
+                isPermanent = false,
             )
+            // Return thumb for extracted page
+            return@withLock getPageThumb(pageTmp, thumbTmpKey)
         }
     }
 
-    override suspend fun getComicPage(uri: String, page: String): TmpFile =
+    override suspend fun getComicPage(uri: String, page: String, cacheNext: Boolean): TmpFile =
         withContext(Dispatchers.IO) {
             pageArgumentLock.withLock(uri) {
                 // Try to get tmp
@@ -82,7 +102,7 @@ class ComicServiceImpl(
                 // Extract
                 val info = getComicInfo(uri)
                 val provider = comicProviderSelector.getComicProvider(info.type)
-                return@withLock provider.getComicPage(uri, page, cacheNext = true)
+                return@withLock provider.getComicPage(uri, page, cacheNext = cacheNext)
             }
         }
 }

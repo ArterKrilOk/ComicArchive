@@ -16,7 +16,10 @@ fun createNavGraph(navController: NavController): NavGraph = navController.creat
     startDestination = Destination.default,
 ) {
     composable<Destination.Home> {
-        HomeScreen(modifier = Modifier.fillMaxSize())
+        HomeScreen(
+            modifier = Modifier.fillMaxSize(),
+            navController = navController,
+        )
     }
 
     composable<Destination.Test> {
@@ -29,8 +32,8 @@ fun createNavGraph(navController: NavController): NavGraph = navController.creat
 
     composable<Destination.Reader> {
         ReaderScreen(
-            uri = it.toRoute<Destination.Reader>().uri,
             modifier = Modifier.fillMaxSize(),
+            destination = it.toRoute<Destination.Reader>(),
         )
     }
 }

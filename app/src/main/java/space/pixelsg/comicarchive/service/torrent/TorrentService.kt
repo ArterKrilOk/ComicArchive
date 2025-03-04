@@ -2,36 +2,46 @@ package space.pixelsg.comicarchive.service.torrent
 
 import kotlinx.coroutines.flow.Flow
 
-interface TorrentService {
+interface TorrentRepo {
+    // Adds torrent using android Uri for torrent file
     fun addTorrent(uri: String)
 
-    fun doAction(id: String, action: TorrentAction)
-    fun getStatus(): Flow<List<TorrentStatus>>
+    // Pauses torrent. ID is torrent hash
+    fun pause(id: String)
+
+    // Resumes torrent. ID is torrent hash
+    fun resume(id: String)
+
+
+    fun getStatus(): Flow<List<TorrentState>>
 }
 
-sealed interface TorrentStatus {
-    val id: String
-    val name: String
+data class TorrentState(
+    // Torrent hash
+    val id: String,
+    // Torrent name
+    val name: String,
+    // Torrent comic type
+    val type: TorrentComicType,
+    // Contents path
+    val path: String,
+    // Status
+    val status: TStatus,
+    // Pieces and files
+    val numPieces: Int,
+    val pieceSize: Long,
+    // Files
+    val files: List<String>,
+    //
+    val progress: Float,
+)
 
-    data class Error(
-        override val id: String,
-        override val name: String,
-        val t: Throwable,
-    ) : TorrentStatus
-
-    data class Loading(
-        override val id: String,
-        override val name: String,
-        val progress: Float,
-    ) : TorrentStatus
-
-    data class Completed(
-        override val id: String,
-        override val name: String,
-    ) : TorrentStatus
+enum class TStatus {
+    Pending, Downloading, Finished, Failed
 }
 
-sealed interface TorrentAction {
-    data object Pause : TorrentAction
-    data object Resume : TorrentAction
+enum class TorrentComicType {
+    Unknown,    // Unknown torrent type
+    Archive,    // Torrent contains archive
+    Plain,      // Torrent contains individual images (pages)
 }

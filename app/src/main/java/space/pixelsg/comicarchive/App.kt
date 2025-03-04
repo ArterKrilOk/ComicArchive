@@ -6,6 +6,7 @@ import org.koin.core.context.startKoin
 import space.pixelsg.comicarchive.data.di.dataModule
 import space.pixelsg.comicarchive.service.di.serviceModule
 import space.pixelsg.comicarchive.ui.di.featuresModule
+import space.pixelsg.comicarchive.ui.di.viewModelsModule
 
 class App : Application() {
     override fun onCreate() {
@@ -17,6 +18,7 @@ class App : Application() {
                 dataModule(),
                 serviceModule(),
                 featuresModule(),
+                viewModelsModule(),
             )
         }
     }
