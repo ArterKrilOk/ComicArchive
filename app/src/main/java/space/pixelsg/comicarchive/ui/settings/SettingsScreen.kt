@@ -21,11 +21,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -90,27 +92,31 @@ private fun GridSizeSetting(
 
     val gridState = rememberLazyGridState()
 
-    LazyVerticalGrid(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(top = 12.dp)
-            .padding(horizontal = 12.dp),
-        state = gridState,
-        userScrollEnabled = false,
-        columns = GridCells.Adaptive(gridSize.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 8.dp,
     ) {
-        items(count = 24) {
-            Box(
-                modifier = Modifier
-                    .aspectRatio(.7f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
+        LazyVerticalGrid(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(top = 12.dp)
+                .padding(horizontal = 12.dp),
+            state = gridState,
+            userScrollEnabled = false,
+            columns = GridCells.Adaptive(gridSize.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(count = 24) {
+                Box(
+                    modifier = Modifier
+                        .aspectRatio(.7f)
+                        .alpha(.7f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                )
+            }
         }
     }
 
