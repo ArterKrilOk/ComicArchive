@@ -10,7 +10,6 @@ import androidx.navigation.toRoute
 import space.pixelsg.comicarchive.ui.home.compose.HomeScreen
 import space.pixelsg.comicarchive.ui.reader.compose.ReaderScreen
 import space.pixelsg.comicarchive.ui.settings.SettingsScreen
-import space.pixelsg.comicarchive.ui.test.TestScreen
 
 fun createNavGraph(navController: NavController): NavGraph = navController.createGraph(
     startDestination = Destination.default,
@@ -20,10 +19,6 @@ fun createNavGraph(navController: NavController): NavGraph = navController.creat
             modifier = Modifier.fillMaxSize(),
             navController = navController,
         )
-    }
-
-    composable<Destination.Test> {
-        TestScreen(modifier = Modifier.fillMaxSize())
     }
 
     composable<Destination.Settings> {

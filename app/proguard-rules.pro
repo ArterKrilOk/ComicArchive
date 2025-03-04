@@ -46,3 +46,7 @@
 
 # @Serializable and @Polymorphic are used at runtime for polymorphic serialization.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
+
+# Keep destination classes
+-keep class space.pixelsg.comicarchive.ui.navigation.Destinations.** { *; }
+-keepnames class space.pixelsg.comicarchive.ui.navigation.Destinations.**

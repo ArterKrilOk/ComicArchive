@@ -5,7 +5,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import space.pixelsg.comicarchive.data.di.dataModule
 import space.pixelsg.comicarchive.service.di.serviceModule
-import space.pixelsg.comicarchive.ui.di.featuresModule
 import space.pixelsg.comicarchive.ui.di.viewModelsModule
 
 class App : Application() {
@@ -17,7 +16,6 @@ class App : Application() {
             modules(
                 dataModule(),
                 serviceModule(),
-                featuresModule(),
                 viewModelsModule(),
             )
         }

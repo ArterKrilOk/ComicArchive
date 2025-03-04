@@ -107,9 +107,9 @@ fun ReaderScreen(modifier: Modifier = Modifier, destination: Destination.Reader)
         PageSelectorDialog(
             show = showPageSelectorDialog,
             currentPage = pagerState.currentPage + 1,
-            range = 0..<pagerState.pageCount,
+            range = 0..pagerState.pageCount,
             onDismiss = { showPageSelectorDialog = false },
-            onApply = { scope.launch { pagerState.scrollToPage(it + 1) } },
+            onApply = { scope.launch { pagerState.scrollToPage(it - 1) } },
         )
 
         Box(

@@ -12,9 +12,6 @@ sealed interface Destination {
     data object Home : Destination
 
     @Serializable
-    data object Test : Destination
-
-    @Serializable
     data object Settings : Destination
 
     @Serializable

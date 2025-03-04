@@ -25,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -37,27 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.logEvent
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import space.pixelsg.comicarchive.R
 import space.pixelsg.comicarchive.ui.navigation.Destination
-import space.pixelsg.comicarchive.ui.navigation.NavigationMessenger
 import space.pixelsg.comicarchive.ui.navigation.createNavGraph
-import teapot.message.MessageDispatcher
-
-private val DrawerGestureDisabledClasses = listOfNotNull(
-    Destination.Reader::class.qualifiedName
-)
 
 @Composable
-fun MainScreen(
-    navMessenger: NavigationMessenger,
-    state: RootFeature.State,
-    dispatcher: MessageDispatcher<RootFeature.Msg.Action>,
-) {
+fun MainScreen() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -66,24 +51,12 @@ fun MainScreen(
         scope.launch { drawerState.close() }
     }
 
-    LaunchedEffect(navController) {
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-                param(
-                    FirebaseAnalytics.Param.SCREEN_NAME,
-                    destination.route ?: "Unknown screen"
-                )
-            }
-        }
-        navMessenger.bindTo { navController }
-    }
-
     val currentNavState by navController.currentBackStackEntryAsState()
     val currentRouteClass = currentNavState?.destination?.route
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = !currentRouteClass.containsInAny(DrawerGestureDisabledClasses),
+        gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(IntrinsicSize.Max),
@@ -92,7 +65,10 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                    verticalArrangement = Arrangement.spacedBy(
+                        8.dp,
+                        Alignment.CenterVertically
+                    ),
                     horizontalAlignment = Alignment.Start,
                 ) {
                     Text(
@@ -165,14 +141,4 @@ fun MainScreen(
             )
         }
     }
-}
-
-fun String?.containsInAny(list: List<String>): Boolean {
-    if (isNullOrBlank()) return false
-
-    list.forEach {
-        if (this.contains(it)) return true
-    }
-
-    return false
 }
